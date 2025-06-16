@@ -6,14 +6,30 @@ export default {
 	plugins: [
 		viteStaticCopy({
 			targets: [
-				{
-					src: 'data/paths.csv',
+				/* {
+					src: 'data/table.json',
 					dest: 'data'
 				},
 				{
 					src: 'data/completed.json',
 					dest: 'data'
-				}
+				}, */
+				{
+					src: 'data/',
+					dest: './'
+				},
+				{
+					src: 'public/',
+					dest: './'
+				},
+				{
+					src: 'src/shadowpath.js',
+					dest: './'
+				},
+				{
+					src: 'src/twitch.js',
+					dest: './'
+				},
 			]
 		})
 	]

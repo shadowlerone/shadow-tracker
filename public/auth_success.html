@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="UTF-8" />
+	<title>title</title>
+</head>
+
+<body onload="f()">
+	Authentication successful!
+
+	<script>
+	/* 	body.addEventListener('load', (e) => {
+			
+		}
+		) */
+	function f () {
+		let usp = new URLSearchParams(document.location.hash.replace('#', '?'))
+			fetch(
+				'http://localhost:3000/set_token',
+				{
+					method: 'POST',
+					body: JSON.stringify({
+						token: usp.get('access_token'),
+						scope: usp.get('scope'),
+						state: usp.get('state'),
+						token_type: usp.get('token_type'),
+					}),
+					headers: {
+						'Content-Type': 'application/json'
+					}
+				}
+			)
+	}
+	</script>
+</body>
+
+</html>

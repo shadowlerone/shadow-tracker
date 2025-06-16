@@ -1,6 +1,8 @@
-import { app, BrowserWindow } from 'electron';
+
+import { app, BrowserWindow, ipcMain, shell } from 'electron';
 import path from 'node:path';
 import started from 'electron-squirrel-startup';
+const fs = require('fs');
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
@@ -28,10 +30,31 @@ const createWindow = () => {
 	mainWindow.webContents.openDevTools();
 };
 
+
+
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
+	ipcMain.handle('ping', () => 'pong')
+	ipcMain.on('READ_FILE', (event, payload) => {
+		const content = fs.readFileSync(payload.path);
+		event.reply('READ_FILE', { content });
+	});
+	ipcMain.on('CHOOSE', (event, payload) => {
+		// const content = fs.readFileSync(payload.path);
+		const response = current_path.choose(payload)
+		console.log(response)
+		console.log(current_path.toString())
+		event.reply('CHOOSE', response);
+	});
+
+	ipcMain.on('SAVE', (event, payload) => {
+		save_completed();
+		event.reply('SAVE', 'saved!')
+	})
+
+	// ipcMain.on('')
 	createWindow();
 
 	// On OS X it's common to re-create a window in the app when the
@@ -55,135 +78,143 @@ app.on('window-all-closed', () => {
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and import them here.
 
-// DATA STUFF
-const fs = require('fs');
-// const path = require('path');
-const csv = require('fast-csv');
 
-let table = []
-
-fs.createReadStream(path.resolve(__dirname, 'data', 'paths.csv'))
-	.pipe(csv.parse({ headers: true }))
-	.on('error', error => console.error(error))
-	.on('data', row => table.push(row))
-	.on('end', rowCount => console.log(`Parsed ${rowCount} rows (${table.length})`));
-
-let completed = require(path.resolve(__dirname, 'data', 'completed.json'))
-
-console.log(completed)
 
 
 // LOGIC Stuff
+//#region LOGIC STUFF
+import ShadowPath from './shadowpath.js'
+let current_path = new ShadowPath();
 
-const OPTIONS = ["D", "N", "H"]
+//#endregion
 
-class ShadowPath {
-	/* constructor(parameters) {
-		
-	} */
-	choices;
+// DASHBOARD STUFF
 
-	constructor() {
-		this.choices = []
+
+//#region Twitch Auth
+
+import { User, AUTH_URL, TWITCH_CLIENT_ID, Poll } from './twitch.js'
+import crypto from 'crypto'
+let STATE;
+let TOKEN
+function authorize() {
+	STATE = crypto.randomInt(0, 10 ** 12 - 1).toString().padStart(12, "0")
+	shell.openExternal(AUTH_URL(STATE))
+}
+authorize()
+
+
+function HEADERS() {
+	if (TOKEN === '') {
+		console.error("Token not set.");
 	}
-	// valid options = D, N, H
-	verify() {
-		for (let i = 0; i < this.choices.length && i < 6; i++) {
-			if (
-				!OPTIONS.includes(this.choices[i])
-			) {
-				console.log(`Choice at index ${i} is invalid.`)
-				this.choices = this.choices.slice(0, i);
-				console.log(`choices: ${this.choices}`)
-				break;
-			}
-		}
-	}
-	toString() {
-		// console.log(this.choices)
-		var out = this.choices.slice(0, 5).join("");
-		if (this.choices.length >= 6) {
-			out += `(${this.choices[5]})`
-		}
-		return out;
-	}
-
-	choose(option) {
-		if (!OPTIONS.includes(option)) {
-			console.log(`Option ${option} not in OPTIONS`)
-			return;
-		}
-		this.choices.push(option);
-		this.verify();
+	return {
+		'Authorization': `Bearer ${TOKEN}`,
+		'Client-Id': TWITCH_CLIENT_ID
 	}
 }
 
 
-console.log(table[0])
+//#endregion
+let USER;
 
 
 
-function find_current_matching_paths(shadow_path) {
-	return table.filter(
-		row => row.MISSION.slice(0, shadow_path.choices.length) == shadow_path.toString()
-	)
-}
-
-function find_unvisited_paths(t) {
-	return t.filter(
-		row => !(row.DONE || completed.includes(parseInt(row.NUMBER)))
-	)
-}
-
-
-function find_visited_paths(t) {
-	return t.filter(
-		row => (row.DONE || completed.includes(parseInt(row.NUMBER)))
-	)
-}
-
-let sp = new ShadowPath()
-/* 
-for (let i = 0; i < 4; i++){
-	sp.choose("H");
-} */
-
-sp.choose("H")
-sp.choose("H")
-sp.choose("D")
-
-// WEBSERVER STUFF
+// START POLL
 
 const express = require('express')
+
+
+
+
+// WEBSERVER STUFF
+//#region WEBSERVER STUFF
 const express_app = express()
 const port = 3000
 
-express_app.get('/', (req, res) => {
-	res.send(sp.toString())
+// express_app.set('view engine', 'pug')
+express_app.use(express.json())
+/* app.use(session({ secret: SESSION_SECRET, resave: false, saveUninitialized: false }));
+app.use(express.static('public'));
+app.use(passport.initialize());
+app.use(passport.session());
+ */
+
+
+
+
+express_app.get('/auth', (req, res) => {
+	if (STATE != req.query.state) {
+		console.error("STATES DON'T MATCH")
+	}
+	if (req.query.error) {
+		res.send(req.query.error)
+		return;
+	}
+	// res.render('auth_success', { title: 'Hey', message: 'Hello there!' })
+	res.sendFile('auth_success.html', {
+		root: path.join(__dirname)
+	})
+
 })
-express_app.get('/table', (req, res) => {
-	res.send(table[0])
-})
-express_app.get('/unvisited', (req, res) => {
-	res.send(
-		find_unvisited_paths(
-			find_current_matching_paths(sp)
+express_app.post('/set_token', (req, res) => {
+	console.log(req.body)
+	TOKEN = req.body.token;
+	console.log(`Token: ${TOKEN}`)
+	fs.writeFileSync('TOKEN', TOKEN, 'utf8')
+	USER = new User(HEADERS());
+	USER.get()
+		.then(
+			e => {
+				console.log(`User: ${USER.id}`)
+				res.send(TOKEN)
+			}
 		)
 
+})
+express_app.get('/', (req, res) => {
+	res.send(
+		current_path.status
+	)
+})
+
+express_app.get('/poll', (req, res) => {
+	console.log("Creating test poll!")
+	let poll = new Poll(USER, HEADERS(), 'test poll', ['test1', 'test2']);
+	poll.start();
+	res.send(poll.data);
+})
+express_app.get('/user', (req, res) => {
+	res.send(USER.data)
+})
+/* express_app.get('/table', (req, res) => {
+	res.send(table[0])
+}) */
+express_app.get('/unvisited', (req, res) => {
+	res.send(
+		current_path.unvisited_paths()
 	)
 })
 
 express_app.get("/current_paths", (req, res) => {
-	res.send(find_current_matching_paths(sp))
+	res.send(current_path.find_current_matching_paths())
 })
 express_app.get('/visited', (req, res) => {
 	res.send(
-		find_visited_paths(
-			table
-		)
+		current_path.find_visited_paths()
 
 	)
+})
+/* express_app.get('/table', (req, res) => {
+	res.send(
+		current_path.table
+	)
+}) */
+
+express_app.get('/current_options', (req, res) => {
+	res.send(current_path.show_choices())
 })
 express_app.listen(port, () => {
 	console.log(`Example app listening on port ${port}`)
 })
+//#endregion

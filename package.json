@@ -37,6 +37,7 @@
     "electron-squirrel-startup": "^1.0.1",
     "express": "^5.1.0",
     "fast-csv": "^5.0.2",
+    "pug": "^3.0.3",
     "vue": "^3.5.16"
   }
 }
