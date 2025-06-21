@@ -10,6 +10,11 @@ class ShadowPath {
 	/* constructor(parameters) {
 		
 	} */
+	static CHOICE_MAP = {
+		'D': "Dark",
+		'N': 'Neutral',
+		"H": 'Hero'
+	}
 	choices;
 	table_fp;
 	completed_fp;
@@ -67,7 +72,7 @@ class ShadowPath {
 
 	choose(option) {
 		if (!OPTIONS.includes(option)) {
-			console.log(`Option ${option} not in OPTIONS`)
+			// console.log(`Option ${option} not in OPTIONS`)
 			return false;
 		}
 		if (!show_choices(this).includes(option)) {
@@ -107,11 +112,16 @@ class ShadowPath {
 	show_choices() {
 		let uv = this.unvisited_paths();
 		let index = this.length < 5 ? this.length : 6;
-		console.log(uv.length)
+		// console.log(uv.length)
 		let choices = Array.from(new Set(uv.map(row => row.MISSION[index])));
-		console.log(`Choices length: ${choices.length}`)
+		// console.log(`Choices length: ${choices.length}`)
 		return choices;
 	}
+
+	show_choices_text() {
+		return this.show_choices().map(e => ShadowPath.CHOICE_MAP[e])
+	}
+
 	save_completed() {
 		if (this.find_current_matching_paths().length == 1) {
 			this.completed.push(this.find_current_matching_paths()[0].NUMBER);

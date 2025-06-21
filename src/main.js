@@ -93,30 +93,21 @@ let current_path = new ShadowPath();
 
 //#region Twitch Auth
 
-import { User, AUTH_URL, TWITCH_CLIENT_ID, Poll } from './twitch.js'
-import crypto from 'crypto'
+import { User, AUTH_URL, TWITCH_CLIENT_ID, Poll, Twitch } from './twitch.js'
 let STATE;
 let TOKEN
-function authorize() {
-	STATE = crypto.randomInt(0, 10 ** 12 - 1).toString().padStart(12, "0")
-	shell.openExternal(AUTH_URL(STATE))
-}
-authorize()
+const twitch_app = new Twitch(TWITCH_CLIENT_ID);
 
-
-function HEADERS() {
-	if (TOKEN === '') {
-		console.error("Token not set.");
-	}
-	return {
-		'Authorization': `Bearer ${TOKEN}`,
-		'Client-Id': TWITCH_CLIENT_ID
-	}
+function authenticate(state, url) {
+	STATE = state;
+	shell.openExternal(url)
 }
+twitch_app.authenticate(authenticate);
+
 
 
 //#endregion
-let USER;
+// let USER;
 
 
 
@@ -132,60 +123,48 @@ const express = require('express')
 const express_app = express()
 const port = 3000
 
-// express_app.set('view engine', 'pug')
 express_app.use(express.json())
-/* app.use(session({ secret: SESSION_SECRET, resave: false, saveUninitialized: false }));
-app.use(express.static('public'));
-app.use(passport.initialize());
-app.use(passport.session());
- */
-
 
 
 
 express_app.get('/auth', (req, res) => {
-	if (STATE != req.query.state) {
-		console.error("STATES DON'T MATCH")
-	}
-	if (req.query.error) {
-		res.send(req.query.error)
-		return;
-	}
-	// res.render('auth_success', { title: 'Hey', message: 'Hello there!' })
 	res.sendFile('auth_success.html', {
-		root: path.join(__dirname)
+		root: path.join('public')
 	})
-
 })
 express_app.post('/set_token', (req, res) => {
 	console.log(req.body)
+	if (STATE != req.body.state) {
+		console.error("STATES DON'T MATCH")
+		console.error(`${req.body.state} != ${STATE}`)
+	}
 	TOKEN = req.body.token;
-	console.log(`Token: ${TOKEN}`)
-	fs.writeFileSync('TOKEN', TOKEN, 'utf8')
-	USER = new User(HEADERS());
-	USER.get()
-		.then(
-			e => {
-				console.log(`User: ${USER.id}`)
-				res.send(TOKEN)
-			}
-		)
-
+	twitch_app.setToken(TOKEN)
 })
 express_app.get('/', (req, res) => {
 	res.send(
 		current_path.status
 	)
 })
-
+express_app.get('/public/:file', (req, res) => {
+	res.sendFile(req.params.file, {
+		root: path.join('public')
+	})
+})
+express_app.get('/status', (req, res) => {
+	res.sendFile('status.html', {
+		root: path.join('public')
+	})
+})
 express_app.get('/poll', (req, res) => {
 	console.log("Creating test poll!")
-	let poll = new Poll(USER, HEADERS(), 'test poll', ['test1', 'test2']);
-	poll.start();
-	res.send(poll.data);
+	let poll = twitch_app.createPoll('test poll', current_path.show_choices_text(),15);
+	res.send(poll.data)
+	/* poll.start().then((e) => res.send(poll.data)); */
+	;
 })
 express_app.get('/user', (req, res) => {
-	res.send(USER.data)
+	res.send(twitch_app.User.data)
 })
 /* express_app.get('/table', (req, res) => {
 	res.send(table[0])

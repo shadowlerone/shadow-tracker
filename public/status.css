@@ -1,0 +1,50 @@
+body {
+	margin:0;
+	padding: 0;
+	height: 100%;
+}
+#status {
+	background-color: red;
+	width: 100%;
+	height: 100%;
+	margin: 0;
+	padding: 0;
+
+	display: flex;
+	flex-direction: column;
+}
+
+#status > div {
+	background-color: yellow;
+	/* max-width:25%; */
+	min-width:50%;
+	display: flex;
+	flex-direction: row;
+}
+
+.dataset {
+	background-color: blue;
+	display: flex;
+	flex-direction: column;
+}
+.dataset, .dataset > div {
+	border: 1px solid black;
+	box-sizing: border-box;
+}
+
+.dataset > div {
+	/* padding: 25px; */
+	/* width: 50%; */
+	height: 50%;
+	aspect-ratio: 1/1;
+}
+.label, .data {
+	text-align: center;
+}
+.data {
+	background-color: aqua;
+}
+.label {
+	font-weight: bold;
+	font-size: larger;
+}

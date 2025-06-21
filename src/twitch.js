@@ -1,9 +1,15 @@
+const fs = require('fs');
+import crypto from 'crypto'
+// import WebSocket from 'ws';
+
 //#region Authentication Stuff
 const TWITCH_CLIENT_ID = '9tyuis3g12cc9s8ywl6ript45vj50r';
 const TWITCH_SECRET = '<YOUR CLIENT SECRET HERE>';
 const SESSION_SECRET = '<SOME SECRET HERE>';
 const CALLBACK_URL = 'http://localhost:3000/auth/twitch/callback';  // You can run locally with - http://localhost:3000/auth/twitch/callback
 
+
+const WEBSOCKET_URL = 'wss://eventsub.wss.twitch.tv/ws';
 
 const SCOPES = [
 	"moderator:manage:announcements",
@@ -62,7 +68,7 @@ class EndPoint {
 			if (this.method == 'POST') {
 
 				options.body = JSON.stringify(this.body)
-				console.log(options.body)
+				// console.log(options.body)
 			}
 			const response = await fetch(this.url,
 				options
@@ -71,16 +77,16 @@ class EndPoint {
 				response.text().then(e => console.log(e))
 				throw new Error(`Response status: ${response.status}.`);
 			}
-			console.log("Received okay!")
+			// console.log("Received okay!")
 			let data = await response.json();
 			if (data.length > 1) {
 				console.warn("More than one result in data. This may be normal, but in this codebase it is considered anomalous.")
 			}
-			console.log(`Data`)
-			console.log(data)
-			console.log(data.data[0])
+			// console.log(`Data`)
+			// console.log(data)
+			// console.log(data.data[0])
 			this._data = data.data[0];
-			console.log(this._data)
+			// console.log(this._data)
 			this.last_request = Date.now();
 			return this._data;
 		} catch (error) {
@@ -162,6 +168,7 @@ class Poll extends CachedEndpoint {
 		)
 
 		this._broadcaster_id = user.id;
+		// console.log(`user_id: ${user.id}`)
 		this._title = title;
 		this._choices = choices;
 		this._duration = duration; // default 2 minutes
@@ -193,9 +200,219 @@ class Poll extends CachedEndpoint {
 }
 
 
+class Announcement extends EndPoint {
+	broadcast_id;
+	constructor(broadcast, headers, message = '',) {
+
+	}
+
+	get body() {
+		return {
+			broadcaster_id: this._broadcaster_id,
+			title: this._title,
+			choices: this._choices.map((e) => { return { title: e } }),
+			duration: this._duration
+		}
+	}
+
+	async send() {
+
+	}
+}
+
+class Transport {
+	method
+	session_id
+}
+
+class EventSub extends EndPoint {
+	type
+	version
+	condition
+	transport
+	constructor(type, session_id, broadcast, version = 1, headers = {}) {
+		super(
+			'https://api.twitch.tv/helix/eventsub/subscriptions',
+			headers,
+			'POST'
+		)
+		this.type = type
+		this.session_id = session_id,
+			this.version = version
+		this.transport = {
+			method: "websocket",
+			session_id: this.session_id
+		}
+		this.condition = {
+			'broadcaster_user_id': broadcast.id
+		}
+	}
+
+	get body() {
+		return {
+			type: this.type,
+			version: this.version,
+			condition: this.condition,
+			transport: this.transport
+		}
+	}
+}
+
 //#endregion
+
+class Twitch {
+	token;
+	client_id;
+	ws;
+	broadcaster;
+	events;
+	session;
+	User;
+	user_id
+	constructor(client_id) {
+		this.client_id = client_id
+
+		this.events = {}
+	}
+
+	get authenticated() { return this.token !== '' }
+	get headers() {
+		if (!this.authenticated) {
+			console.error("Token not set.");
+		}
+		return {
+			'Authorization': `Bearer ${this.token}`,
+			'Client-Id': this.client_id
+		}
+	}
+	get session_id() {
+		if (this.session == undefined) {
+			console.error('no session yet')
+		}
+		return this.session.id;
+	}
+	get websocket_status() {
+		return this.session != undefined ? this.session.status : 'disconnected';
+	}
+	/**
+	 * authenticate(): authenticates with twitch servers if token in `TOKEN` file is invalid
+	 * @param {*} callback callback function if saved token is invalid
+	 */
+	authenticate(callback) {
+		var f = fs.readFileSync('TOKEN')// (err, data) => {})
+
+		if (!f.err && f.data) {
+			// console.log(f.data);
+			if (this.verifyAuth(token)) {
+				this.setToken(token)
+				return;
+			}
+			// ...
+		}
+		var state = crypto.randomInt(0, 10 ** 12 - 1).toString().padStart(12, "0")
+		// console.log(`STATE: ${state}`)
+		callback(state, AUTH_URL(state))
+
+		// this.setToken(token)
+	}
+	verifyAuth() {
+		return true;
+	}
+
+	setToken(token) {
+		this.token = token;
+		// verify
+		// console.log("Received token!")
+		this.setup();
+
+	}
+
+
+	setup() {
+		if (!this.authenticated) {
+			console.error("Not authenticated")
+			return;
+		}
+		this.User = new User(this.headers);
+		this.User.get().then(() => {
+
+			console.log(`user_id: ${this.User.id}`)
+			this.user_id = this.User.id;
+			this.websocketConnect().then(() => {
+				this.on('channel.poll.end', (event) => {
+					console.log("DETECTED A POLL ENDING")
+				})
+			});
+		});
+
+		// setup websocket
+	}
+	saveToken() {
+		fs.writeFileSync('TOKEN', this.token, 'utf8')
+	}
+
+
+	async websocketConnect() {
+		console.debug("Setting up websocket")
+		this.ws = new WebSocket(WEBSOCKET_URL)
+		console.debug("connected!")
+		this.ws.addEventListener('error', console.error);
+
+		this.ws.addEventListener('message', function message(event) {
+			var event_data = JSON.parse(event.data)
+			console.log('received: %s', event_data);
+			console.log(event_data);
+			if (event_data.metadata.message_type == 'welcome') {
+				// this means it is the welcome message
+				this.session = event_data.payload.session
+				console.log(this.session)
+			}
+			if (event_data.metadata.message_type == 'notification') {
+				handleEvent(event_data.payload)
+			}
+		});
+		return 'connected'
+	}
+
+	handleEvent(event_data) {
+		var event_type = event_data.subscription.type;
+		var event = event_data.event;
+		if (this.events.hasOwnProperty(event_type)) {
+			this.events.forEach(cb => {
+				cb(event)
+			});
+		}
+	}
+
+	on(eventName, callback) {
+		this.addEventListener(eventName, callback);
+	}
+	addEventListener(eventName, callback) {
+		var e = new EventSub(eventName, this.session_id, this.user_id, 1, this.headers)
+		e.get();
+		this.events[eventName].push(callback);
+	}
+
+
+	/**
+	 * Create Announcement
+	 */
+	createAnnouncement() {
+		var a = new Announcement()
+		//TODO: rest of method
+	}
+	createPoll(title, choices, duration = 2 * 60) {
+		// console.log(`user:`)
+		// console.log(this.User)
+		let poll = new Poll(this.User, this.headers, title, choices, duration);
+		poll.start();
+		return poll;
+	}
+}
+
 
 export {
 	EndPoint, CachedEndpoint, User, Poll,
 	AUTH_URL, TWITCH_CLIENT_ID, // authorize,
+	Twitch
 }
