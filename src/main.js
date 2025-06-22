@@ -129,7 +129,7 @@ express_app.use(express.json())
 
 express_app.get('/auth', (req, res) => {
 	res.sendFile('auth_success.html', {
-		root: path.join('public')
+		root: path.join(__dirname,'public')
 	})
 })
 express_app.post('/set_token', (req, res) => {

@@ -10,12 +10,12 @@
 	Authentication successful!
 
 	<script>
-	/* 	body.addEventListener('load', (e) => {
-			
-		}
-		) */
-	function f () {
-		let usp = new URLSearchParams(document.location.hash.replace('#', '?'))
+		/* 	body.addEventListener('load', (e) => {
+				
+			}
+			) */
+		function f() {
+			let usp = new URLSearchParams(document.location.hash.replace('#', '?'))
 			fetch(
 				'http://localhost:3000/set_token',
 				{
@@ -31,7 +31,9 @@
 					}
 				}
 			)
-	}
+			setTimeout(window.close, 2000)
+
+		}
 	</script>
 </body>
 

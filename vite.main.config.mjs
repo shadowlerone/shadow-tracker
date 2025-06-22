@@ -23,13 +23,17 @@ export default {
 					dest: './'
 				},
 				{
+					src: 'src/',
+					dest: './'
+				},
+				/* {
 					src: 'src/shadowpath.js',
 					dest: './'
 				},
 				{
 					src: 'src/twitch.js',
 					dest: './'
-				},
+				}, */
 			]
 		})
 	]
