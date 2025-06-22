@@ -299,16 +299,21 @@ class Twitch {
 	 * @param {*} callback callback function if saved token is invalid
 	 */
 	authenticate(callback) {
-		var f = fs.readFileSync('TOKEN')// (err, data) => {})
+		try {
+			var f = fs.readFileSync('TOKEN')// (err, data) => {})
 
-		if (!f.err && f.data) {
-			// console.log(f.data);
-			if (this.verifyAuth(token)) {
-				this.setToken(token)
-				return;
+			if (!f.err && f.data) {
+				// console.log(f.data);
+				if (this.verifyAuth(token)) {
+					this.setToken(token)
+					return;
+				}
+				// ...
 			}
-			// ...
+		} catch (error) {
+			console.error("TOKEN file not found!")
 		}
+		
 		var state = crypto.randomInt(0, 10 ** 12 - 1).toString().padStart(12, "0")
 		// console.log(`STATE: ${state}`)
 		callback(state, AUTH_URL(state))

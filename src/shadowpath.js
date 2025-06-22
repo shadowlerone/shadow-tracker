@@ -42,6 +42,7 @@ class ShadowPath {
 			potential_choices: this.show_choices(),
 			potential_paths_count: this.unvisited_paths().length,
 			completed: this.completed.length,
+			paths_left: this.table.length - this.completed.length,
 			percentage_completed: 100 * this.completed.length / this.table.length,
 			current_path_number: this.find_current_matching_paths().length == 1 ? this.find_current_matching_paths()[0].NUMBER : "Unconfirmed"
 		}
@@ -75,7 +76,7 @@ class ShadowPath {
 			// console.log(`Option ${option} not in OPTIONS`)
 			return false;
 		}
-		if (!show_choices(this).includes(option)) {
+		if (!this.show_choices().includes(option)) {
 			return false;
 		}
 		this.choices.push(option);

@@ -7,78 +7,64 @@
 	<title>Status</title>
 	<meta name='viewport' content='width=device-width, initial-scale=1'>
 	<link rel='stylesheet' type='text/css' media='screen' href='/public/status.css'>
-	<script src='/public/status.js'></script>
 </head>
 
 <body>
 	<div id="status">
-		<div>
-			<div class="dataset">
-				<div class="label" id="label-current-path">Current path:</div>
-				<div class="data" id="data-current-path">NNN</div>
-			</div>
-			<div class="dataset">
-				<div class="label" id="label-path-number">Path Number:</div>
-				<div class="data" id="data-path-number">Unknown</div>
-			</div>
-		</div>
-		<div>
-			<h1>
-				Possible Paths:
-			</h1>
-			<div class="dataset">
-				<!-- <div class="label" id="label-dark-possible">Dark</div> -->
-				<div class="data" id="data-dark-possible">Dark</div>
-			</div>
-			<div class="dataset">
-				<!-- <div class="label" id="label-neutral-possible">Neutral</div> -->
-				<div class="data" id="data-neutral-possible">Neutral</div>
-			</div>
-			<div class="dataset">
-				<!-- <div class="label" id="label-hero-possible">Hero</div> -->
-				<div class="data" id="data-hero-possible">Hero</div>
-			</div>
-		</div>
-		<div>
-			<div class="dataset">
-				<div class="label" id="label-level-1-choice">Stage 1</div>
-				<div class="data" id="data-level-1-choice">N</div>
-			</div>
-			<div class="dataset">
-				<div class="label" id="label-level-2-choice">Stage 2</div>
-				<div class="data" id="data-level-2-choice">N</div>
-			</div>
-			<div class="dataset">
-				<div class="label" id="label-level-3-choice">Stage 3</div>
-				<div class="data" id="data-level-3-choice">N</div>
-			</div>
-			<div class="dataset">
-				<div class="label" id="label-level-4-choice">Stage 4</div>
-				<div class="data" id="data-level-4-choice">N</div>
-			</div>
-			<div class="dataset">
-				<div class="label" id="label-level-5-choice">Stage 5</div>
-				<div class="data" id="data-level-5-choice">N</div>
-			</div>
-			<div class="dataset">
-				<div class="label" id="label-level-6-choice">Stage 6</div>
-				<div class="data" id="data-level-6-choice">(D)</div>
-			</div>
-		</div>
-
-
-
 		<div class="">
 			<div class="dataset">
-				<div class="label" id="label-paths-completed">Paths completed:</div>
-				<div class="data" id="data-paths-completed"></div>
-			</div>
-			<div class="dataset">
-				<div class="label" id="label-paths-left">Paths left:</div>
-				<div class="data" id="data-paths-left"></div>
+				<div class="label" id="label-paths-completed">Paths completed: <p class="data"
+						id="data-paths-completed"></p>
+				</div>
+
+				<div class="label" id="label-paths-left">Paths left: <p class="data" id="data-paths-left"></p></div>
+				<div class="label" id="label-paths-left">Percent complete: <p class="data" id="data-percent-complete"></p></div>
+
 			</div>
 		</div>
+		<div>
+
+			<div class="dataset">
+
+				<div class="label" id="label-current-path">Current path:
+					<p class="data" id="data-current-path"></p>
+				</div>
+
+				<div class="label" id="label-path-number">Path Number:
+					<p class="data" id="data-path-number"></p>
+				</div>
+
+			</div>
+		</div>
+
+
+		<div id="paths">
+
+			<div class="dataset">
+				<h3>
+					Possible Paths:
+				</h3>
+				<!-- <div class="label" id="label-dark-possible">Dark</div> -->
+				<div class="data dark" id="data-dark-possible">Dark</div>
+				<!-- <div class="label" id="label-neutral-possible">Neutral</div> -->
+				<div class="data neutral" id="data-neutral-possible">Neutral</div>
+
+				<!-- <div class="label" id="label-hero-possible">Hero</div> -->
+				<div class="data hero" id="data-hero-possible">Hero</div>
+			</div>
+		</div>
+
+
+
+
+
 	</div>
+	<div class="hidden">
+		<pre id="debug"></pre>
+	</div>
+
+	<script src='/public/status.js'></script>
+
 </body>
 
 </html>
