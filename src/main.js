@@ -148,12 +148,12 @@ express_app.get('/', (req, res) => {
 })
 express_app.get('/public/:file', (req, res) => {
 	res.sendFile(req.params.file, {
-		root: path.join('public')
+		root: path.join(__dirname,'public')
 	})
 })
 express_app.get('/status', (req, res) => {
 	res.sendFile('status.html', {
-		root: path.join('public')
+		root: path.join(__dirname,'public')
 	})
 })
 express_app.get('/poll', (req, res) => {
