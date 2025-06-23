@@ -1,6 +1,4 @@
 <template>
-	<h1>💖 Hello World!</h1>
-	<p>Welcome to your Electron applications.</p>
 	<div>
 		<h2>
 			Stats
@@ -17,9 +15,9 @@
 
 	</div>
 	<div>
-		<button @click="choose('D')">D</button>
-		<button @click="choose('N')">N</button>
-		<button @click="choose('H')">H</button>
+		<button ref="button-" @click="choose('D')">Dark</button>
+		<button ref="button-" @click="choose('N')">Neutral</button>
+		<button ref="button-" @click="choose('H')">Hero</button>
 	</div>
 	<div>
 		<button @click="save()">Save</button>
@@ -40,6 +38,13 @@ onMounted(() => {
 	});
 	window.ipc.on('CHOOSE', (payload) => {
 		console.log(`choose ${payload ? "succeeded" : "failed"}`)
+	})
+	window.ipc.on('POLL:END', (payload) => {
+		console.log(payload)
+	} )
+
+	window.ipc.on('STATUS', (payload) => {
+		// TODO
 	})
 })
 function choose(option) {

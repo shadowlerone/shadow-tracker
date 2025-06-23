@@ -8,7 +8,7 @@ const fs = require('fs');
 if (started) {
 	app.quit();
 }
-
+// let mainWindow;
 const createWindow = () => {
 	// Create the browser window.
 	const mainWindow = new BrowserWindow({
@@ -18,7 +18,34 @@ const createWindow = () => {
 			preload: path.join(__dirname, 'preload.js'),
 		},
 	});
-
+	twitch_app.on_setup = (t) => {
+		console.log("Called on_setup")
+		t.on('channel.poll.end', (event) => {
+			console.log("DETECTED A POLL ENDING")
+			console.log(event.choices)
+			let base_choice = {votes: -1}
+			var winner = event.choices.reduce((a, c) => {
+				if (Array.isArray(a)) {
+					console.log("Sorting hit array")
+					var ac = a[0]
+					if (ac.votes == c.votes) {
+						console.log("Sorting pushed to array")
+						a.push(c)
+						return a
+					}
+					return ac.votes < c.votes ? c : ac
+				} else {
+					if (c.votes == a.votes) {
+						console.log("Sorting created to array")
+						return [a, c]
+					}
+					return a.votes < c.votes ? c : a
+				}
+			}, base_choice)
+			console.log(`Winner: ${winner}`)
+			mainWindow.webContents.send('POLL:END', winner)
+		})
+	}
 	// and load the index.html of the app.
 	if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
 		mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
@@ -53,6 +80,8 @@ app.whenReady().then(() => {
 		save_completed();
 		event.reply('SAVE', 'saved!')
 	})
+
+
 
 	// ipcMain.on('')
 	createWindow();
@@ -102,16 +131,13 @@ function authenticate(state, url) {
 	STATE = state;
 	shell.openExternal(url)
 }
-twitch_app.authenticate(authenticate);
 
+
+twitch_app.authenticate(authenticate);
+console.log("Called authenticate")
 
 
 //#endregion
-// let USER;
-
-
-
-// START POLL
 
 const express = require('express')
 
@@ -129,7 +155,7 @@ express_app.use(express.json())
 
 express_app.get('/auth', (req, res) => {
 	res.sendFile('auth_success.html', {
-		root: path.join(__dirname,'public')
+		root: path.join(__dirname, 'public')
 	})
 })
 express_app.post('/set_token', (req, res) => {
@@ -148,20 +174,20 @@ express_app.get('/', (req, res) => {
 })
 express_app.get('/public/:file', (req, res) => {
 	res.sendFile(req.params.file, {
-		root: path.join(__dirname,'public')
+		root: path.join(__dirname, 'public')
 	})
 })
 express_app.get('/status', (req, res) => {
 	res.sendFile('status.html', {
-		root: path.join(__dirname,'public')
+		root: path.join(__dirname, 'public')
 	})
 })
 express_app.get('/poll', (req, res) => {
 	console.log("Creating test poll!")
-	let poll = twitch_app.createPoll('test poll', current_path.show_choices_text(),15);
+	let poll = twitch_app.createPoll('test poll', current_path.show_choices_text(), 30);
 	res.send(poll.data)
-	/* poll.start().then((e) => res.send(poll.data)); */
-	;
+		/* poll.start().then((e) => res.send(poll.data)); */
+		;
 })
 express_app.get('/user', (req, res) => {
 	res.send(twitch_app.User.data)

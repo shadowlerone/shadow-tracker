@@ -233,7 +233,7 @@ class EventSub extends EndPoint {
 	constructor(type, session_id, broadcast, version = 1, headers = {}) {
 		super(
 			'https://api.twitch.tv/helix/eventsub/subscriptions',
-			headers,
+			Object.assign({}, headers, { 'Content-Type': 'application/json' }),
 			'POST'
 		)
 		this.type = type
@@ -244,7 +244,7 @@ class EventSub extends EndPoint {
 			session_id: this.session_id
 		}
 		this.condition = {
-			'broadcaster_user_id': broadcast.id
+			'broadcaster_user_id': broadcast
 		}
 	}
 
@@ -268,11 +268,14 @@ class Twitch {
 	events;
 	session;
 	User;
-	user_id
+	user_id;
+	event_handler_queue;
+	on_setup = (t) => { };
 	constructor(client_id) {
 		this.client_id = client_id
 
 		this.events = {}
+		this.event_handler_queue = []
 	}
 
 	get authenticated() { return this.token !== '' }
@@ -287,7 +290,8 @@ class Twitch {
 	}
 	get session_id() {
 		if (this.session == undefined) {
-			console.error('no session yet')
+			console.error('no session yet');
+			return undefined;
 		}
 		return this.session.id;
 	}
@@ -313,7 +317,7 @@ class Twitch {
 		} catch (error) {
 			console.error("TOKEN file not found!")
 		}
-		
+
 		var state = crypto.randomInt(0, 10 ** 12 - 1).toString().padStart(12, "0")
 		// console.log(`STATE: ${state}`)
 		callback(state, AUTH_URL(state))
@@ -340,17 +344,12 @@ class Twitch {
 		}
 		this.User = new User(this.headers);
 		this.User.get().then(() => {
-
 			console.log(`user_id: ${this.User.id}`)
 			this.user_id = this.User.id;
-			this.websocketConnect().then(() => {
-				this.on('channel.poll.end', (event) => {
-					console.log("DETECTED A POLL ENDING")
-				})
-			});
+			this.websocketConnect()
 		});
-
 		// setup websocket
+		this.on_setup(this);
 	}
 	saveToken() {
 		fs.writeFileSync('TOKEN', this.token, 'utf8')
@@ -363,17 +362,27 @@ class Twitch {
 		console.debug("connected!")
 		this.ws.addEventListener('error', console.error);
 
-		this.ws.addEventListener('message', function message(event) {
+		this.ws.addEventListener('message', (event) => {
 			var event_data = JSON.parse(event.data)
 			console.log('received: %s', event_data);
 			console.log(event_data);
-			if (event_data.metadata.message_type == 'welcome') {
+			if (event_data.metadata.message_type == 'session_welcome') {
 				// this means it is the welcome message
 				this.session = event_data.payload.session
 				console.log(this.session)
+				console.log(this.event_handler_queue)
+				if (this.event_handler_queue != undefined) {
+					this.event_handler_queue.forEach(
+						(e) => {
+							console.log(`Attempting to add event listener for ${e.name} with method ${e.callback.toString()}`)
+							this.on(e.name, e.callback)
+						})
+					this.event_handler_queue.length = 0;
+				}
+
 			}
 			if (event_data.metadata.message_type == 'notification') {
-				handleEvent(event_data.payload)
+				this.handleEvent(event_data.payload)
 			}
 		});
 		return 'connected'
@@ -383,7 +392,7 @@ class Twitch {
 		var event_type = event_data.subscription.type;
 		var event = event_data.event;
 		if (this.events.hasOwnProperty(event_type)) {
-			this.events.forEach(cb => {
+			this.events[event_type].forEach(cb => {
 				cb(event)
 			});
 		}
@@ -393,9 +402,24 @@ class Twitch {
 		this.addEventListener(eventName, callback);
 	}
 	addEventListener(eventName, callback) {
-		var e = new EventSub(eventName, this.session_id, this.user_id, 1, this.headers)
-		e.get();
-		this.events[eventName].push(callback);
+		if (this.session_id == undefined) {
+			console.log(`Adding event ${eventName} to queue for after authentications`)
+			if (this.event_handler_queue == undefined) {
+				this.event_handler_queue = []
+			}
+			this.event_handler_queue.push({ name: eventName, callback: callback })
+		} else {
+			console.log(`Registered ${eventName}`)
+			console.log(`User Id: ${this.user_id}`)
+			var e = new EventSub(eventName, this.session_id, this.user_id, 1, this.headers)
+			console.log(e.body)
+			e.get();
+			if (this.events[eventName] == undefined) {
+				this.events[eventName] = []
+			}
+			this.events[eventName].push(callback);
+		}
+
 	}
 
 

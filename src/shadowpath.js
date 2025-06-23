@@ -13,7 +13,7 @@ class ShadowPath {
 	static CHOICE_MAP = {
 		'D': "Dark",
 		'N': 'Neutral',
-		"H": 'Hero'
+		'H': 'Hero'
 	}
 	choices;
 	table_fp;
@@ -39,6 +39,7 @@ class ShadowPath {
 	get status() {
 		return {
 			current_path_string: this.toString(),
+			current_path: this.choices,
 			potential_choices: this.show_choices(),
 			potential_paths_count: this.unvisited_paths().length,
 			completed: this.completed.length,
