@@ -1,5 +1,6 @@
 
 import path from 'node:path';
+const fs = require('fs');
 
 // console.log(`table: ${table}`)
 // console.log(table);
@@ -45,10 +46,19 @@ class ShadowPath {
 			completed: this.completed.length,
 			paths_left: this.table.length - this.completed.length,
 			percentage_completed: 100 * this.completed.length / this.table.length,
-			current_path_number: this.find_current_matching_paths().length == 1 ? this.find_current_matching_paths()[0].NUMBER : "Unconfirmed"
+			current_path_number: this.find_current_matching_paths().length == 1 ? `${this.find_current_matching_paths()[0].NUMBER} - ${this.find_current_matching_paths()[0].NAME}` : "Unconfirmed"
 		}
 	}
 
+	get statistics() {
+		return Object.assign({},
+			this.status,
+			{
+				days_left: (this.table.length - this.completed.length) / 24,
+				unvisited_paths: this.unvisited_paths()
+			}
+		)
+	}
 
 	// valid options = D, N, H
 	verify() {
@@ -70,6 +80,10 @@ class ShadowPath {
 			out += `(${this.choices[5]})`
 		}
 		return out;
+	}
+
+	reset() {
+		this.choices.length = 0;
 	}
 
 	choose(option) {
@@ -112,6 +126,9 @@ class ShadowPath {
 	}
 
 	show_choices() {
+		if (this.length >= 6) {
+			return []
+		}
 		let uv = this.unvisited_paths();
 		let index = this.length < 5 ? this.length : 6;
 		// console.log(uv.length)
@@ -125,10 +142,16 @@ class ShadowPath {
 	}
 
 	save_completed() {
+		var o = 0;
 		if (this.find_current_matching_paths().length == 1) {
-			this.completed.push(this.find_current_matching_paths()[0].NUMBER);
+			var n = parseInt(this.find_current_matching_paths()[0].NUMBER)
+			if (!this.completed.includes(n)) {
+				this.completed.push(n);
+				o = n;
+			}
 		}
 		fs.writeFileSync(this.completed_fp, JSON.stringify(this.completed), 'utf8')
+		return o
 	}
 }
 

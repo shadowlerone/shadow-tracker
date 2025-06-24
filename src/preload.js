@@ -12,7 +12,13 @@ const { contextBridge, ipcRenderer } = require('electron')
 }) */
 
 
-const validChannels = ['READ_FILE', 'WRITE_FILE', 'CHOOSE', 'SAVE', 'POLL:END'];
+const validChannels = [
+	'READ_FILE', 'WRITE_FILE', 
+	'CHOOSE', 'SAVE', 
+	'POLL:START','POLL:END',
+	'STATUS',
+	'RESET'
+];
 contextBridge.exposeInMainWorld(
 	'ipc', {
 	send: (channel, data) => {

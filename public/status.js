@@ -62,4 +62,4 @@ function setValue(element_id, value){
 	document.getElementById(element_id).innerText = value;
 }
 update();
-setInterval(update, 5000)
+setInterval(update, 1000)

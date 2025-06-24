@@ -23,7 +23,7 @@ const createWindow = () => {
 		t.on('channel.poll.end', (event) => {
 			console.log("DETECTED A POLL ENDING")
 			console.log(event.choices)
-			let base_choice = {votes: -1}
+			let base_choice = { votes: -1 }
 			var winner = event.choices.reduce((a, c) => {
 				if (Array.isArray(a)) {
 					console.log("Sorting hit array")
@@ -77,8 +77,23 @@ app.whenReady().then(() => {
 	});
 
 	ipcMain.on('SAVE', (event, payload) => {
-		save_completed();
-		event.reply('SAVE', 'saved!')
+		var i = current_path.save_completed();
+		event.reply('SAVE', i)
+		event.reply('STATUS', current_path.statistics)
+
+	})
+	ipcMain.on('STATUS', (event, payload) => {
+		event.reply('STATUS', current_path.statistics)
+	})
+	ipcMain.on('RESET', (event, payload) => {
+		current_path.reset();
+		event.reply('STATUS', current_path.statistics)
+	})
+	ipcMain.on('POLL:START', (event, payload) => {
+		let poll = twitch_app.createPoll(payload.title, current_path.show_choices_text(), payload.duration ? payload.duration : 15);
+		// poll.start()
+		// res.send(poll.data)
+		event.reply('POLL:STARTED', current_path.statistics)
 	})
 
 
@@ -100,6 +115,7 @@ app.whenReady().then(() => {
 // explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
 	if (process.platform !== 'darwin') {
+		current_path.save_completed();
 		app.quit();
 	}
 });

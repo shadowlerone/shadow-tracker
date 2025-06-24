@@ -1,27 +1,128 @@
 <template>
 	<div>
-		<h2>
-			Stats
-		</h2>
-		<div>
-			<div>Current Path</div>
-			<div>HHD</div>
+		<div v-if="status != undefined">
+			<h2>Current Path</h2>
+			<div class="level-container">
+				<template v-for="c in status.current_path">
+					<div class="level" :class="c">{{ c }}</div>
+				</template>
+				<template v-if="status.current_path.length == 0">
+					<div class="level">Path not started!</div>
+				</template>
+			</div>
+
 		</div>
-		<h2>Controls</h2>
-		<div>
-			<div>Current Path</div>
-			<div>HHD</div>
+		<div v-if="status != undefined">
+			<!-- <div>Current Path: {{ status.current_path_string }}</div> -->
+			<div>Path number: {{ status.current_path_number }}</div>
+			<!-- <div v-if="status.current_path_number != 'Unconfirmed'">Path name: {{  }}</div> -->
 		</div>
 
 	</div>
-	<div>
-		<button ref="button-" @click="choose('D')">Dark</button>
-		<button ref="button-" @click="choose('N')">Neutral</button>
-		<button ref="button-" @click="choose('H')">Hero</button>
+	<template v-if="status != undefined && status.current_path.length < 6">
+		<h2>Controls</h2>
+		<div class="btn-container" v-if="status != undefined">
+			<button class="dark btn" v-if="status.potential_choices.includes('D')" @click="choose('D')">Dark</button>
+			<button class="neutral btn" v-if="status.potential_choices.includes('N')"
+				@click="choose('N')">Neutral</button>
+			<button class="hero btn" v-if="status.potential_choices.includes('H')" @click="choose('H')">Hero</button>
+		</div>
+	</template>
+
+	<h2>Poll</h2>
+	<div class="group no-radius">
+		<!-- <label>
+			Poll Title
+		</label> -->
+		<div class="flex">
+			<input :disabled="poll_running || poll_disabled" placeholder="Poll Title" class="input" ref="poll-title" />
+			<button :disabled="poll_running || poll_disabled" class="btn" @click="startPoll()">Start Poll</button>
+		</div>
+		<div class="btn-container" v-if="poll_result">
+			<template v-if="Array.isArray(poll_result)">
+				<button v-for="w in poll_result" @click="choose(w.title[0])" class="level btn no-radius"
+					:class="w.title">
+					{{ w.title }}
+				</button>
+			</template>
+			<template v-else>
+				<button @click="choose(poll_result.title[0])" class="level btn no-radius" :class="poll_result.title">
+					{{ poll_result.title }}
+				</button>
+			</template>
+			<!-- {{ poll_result }} -->
+		</div>
 	</div>
-	<div>
-		<button @click="save()">Save</button>
+
+
+	<h2>Admin</h2>
+	<div class="btn-container">
+		<button class='btn' @click="save()">Save</button>
+		<button class='btn' @click="save_reset()">Save and Reset</button>
+		<button class='btn' @click="reset()">Reset</button>
 	</div>
+	<h2>Stats</h2>
+	<button @click="showStats = !showStats">Toggle Stats</button>
+	<div v-if="status && showStats">
+		<h2>Progression</h2>
+		<table>
+			<thead>
+				<tr>
+					<th>Paths Completed</th>
+					<th>Paths Left</th>
+					<th>Choices Left</th>
+					<th>Percentage Completed</th>
+					<th>Days Left</th>
+					<!-- <th>Days Left</th> -->
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td>{{ status.completed }}</td>
+					<td>{{ status.paths_left }}</td>
+					<td>{{ status.paths_left * 6 }}</td>
+					<td>{{ status.percentage_completed.toFixed(2) + '%' }}</td>
+					<td>{{ status.days_left }}</td>
+				</tr>
+			</tbody>
+		</table>
+
+		<h2>Possible paths given current run:</h2>
+		<table>
+			<thead>
+				<tr>
+					<th rowspan="2">Number</th>
+					<th rowspan="2">Name</th>
+					<th rowspan="2">Path</th>
+					<th rowspan="1" colspan="7">Levels</th>
+				</tr>
+				<tr>
+					<th>1</th>
+					<th>2</th>
+					<th>3</th>
+					<th>4</th>
+					<th>5</th>
+					<th>6</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr v-for="uv in status.unvisited_paths">
+					<td>{{ uv.NUMBER }}</td>
+					<td>{{ uv.NAME }}</td>
+					<td>{{ uv.MISSION }}</td>
+					<td>{{ uv["STAGE 1"] }}</td>
+					<td>{{ uv["STAGE 2"] }}</td>
+					<td>{{ uv["STAGE 3"] }}</td>
+					<td>{{ uv["STAGE 4"] }}</td>
+					<td>{{ uv["STAGE 5"] }}</td>
+					<td>{{ uv["BOSS"] }}</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+	<!-- <div>
+		<p>{{ status }}</p>
+	</div> -->
 	<!-- 	<div>
 		<button>Start Poll</button>
 	</div> -->
@@ -30,7 +131,17 @@
 <script setup>
 
 
-import { ref, onMounted } from 'vue'
+import { useTemplateRef, ref, onMounted, computed } from 'vue'
+
+let status = ref();
+let poll_result = ref();
+let poll_running = ref(false);
+let poll_disabled = ref(false);
+let showStats = ref(false)
+
+const poll_title = useTemplateRef('poll-title')
+// const poll_button = useTemplateRef
+// const poll_duration = useTemplateRef('poll-duration')
 
 onMounted(() => {
 	window.ipc.on('READ_FILE', (payload) => {
@@ -41,20 +152,71 @@ onMounted(() => {
 	})
 	window.ipc.on('POLL:END', (payload) => {
 		console.log(payload)
-	} )
+		poll_result.value = payload
+		poll_running.value = false;
+	})
 
 	window.ipc.on('STATUS', (payload) => {
 		// TODO
+		status.value = payload;
+		console.log(status.value)
+
+
+
+		if (status.value.current_path.length < 6) {
+			// poll_title.value.disabled = false;
+			poll_disabled = false;
+			poll_title.value.value = `Route for level ${status.value.current_path.length + 1}`
+		} else {
+			poll_disabled = true;
+
+			// poll_title.value.disabled = true;
+		}
+		if (status.potential_choices < 2) {
+			poll_disabled = true;
+		}
 	})
+	window.ipc.on('SAVE', (payload) => {
+		// TODO
+		if (payload > 0) {
+			alert(`Saved! Path ${payload} added to completed list!`);
+		} else {
+			alert('Saved!')
+		}
+	})
+	window.ipc.send('STATUS')
 })
+
+
 function choose(option) {
 	console.log(`choosing ${option}`)
+	poll_result.value = undefined;
 	const payload = option
 	window.ipc.send('CHOOSE', payload)
+	window.ipc.send('STATUS')
 }
 
 function save() {
 	window.ipc.send('SAVE', {})
+}
+function save_reset() {
+	save();
+	_reset();
+}
+
+function startPoll() {
+	window.ipc.send('POLL:START', { title: poll_title.value.value })
+	poll_running.value = true;
+
+}
+function reset() {
+	if (confirm("Reset without saving?")) {
+		_reset()
+	}
+}
+function _reset() {
+	poll_result.value = ''
+	window.ipc.send('RESET', {})
 }
 
 console.log('👋 This message is being logged by "App.vue", included via Vite');
