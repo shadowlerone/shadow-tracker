@@ -1,7 +1,7 @@
 {
 	"name": "shadow-tracker",
 	"productName": "ShadowTracker",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "A progress tracker for the game Shadow The Hedgehog",
 	"main": ".vite/build/main.js",
 	"scripts": {
@@ -26,6 +26,7 @@
 		"@electron-forge/plugin-auto-unpack-natives": "^7.2.0",
 		"@electron-forge/plugin-fuses": "^7.2.0",
 		"@electron-forge/plugin-vite": "^7.2.0",
+		"@electron-forge/publisher-github": "^7.8.1",
 		"@electron/fuses": "^1.8.0",
 		"@vitejs/plugin-vue": "^5.2.4",
 		"electron": "36.4.0",
