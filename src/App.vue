@@ -35,7 +35,10 @@
 			Poll Title
 		</label> -->
 		<div class="flex">
-			<input :disabled="poll_running || poll_disabled" placeholder="Poll Title" class="input" ref="poll-title" />
+			<input :disabled="poll_running || poll_disabled" placeholder="Poll Title" class="input"
+				:value="poll_title" />
+			<input :disabled="poll_running || poll_disabled" placeholder="Poll Duration" type="number" min="15" max="300" class="input"
+				:value="poll_duration" />
 			<button :disabled="poll_running || poll_disabled" class="btn" @click="startPoll()">Start Poll</button>
 		</div>
 		<div class="btn-container" v-if="poll_result">
@@ -139,7 +142,9 @@ let poll_running = ref(false);
 let poll_disabled = ref(false);
 let showStats = ref(false)
 
-const poll_title = useTemplateRef('poll-title')
+let poll_title = ref('')
+let poll_duration = ref(120)
+// const poll_title = useTemplateRef('poll-title')
 // const poll_button = useTemplateRef
 // const poll_duration = useTemplateRef('poll-duration')
 
@@ -166,7 +171,7 @@ onMounted(() => {
 		if (status.value.current_path.length < 6) {
 			// poll_title.value.disabled = false;
 			poll_disabled = false;
-			poll_title.value.value = `Route for level ${status.value.current_path.length + 1}`
+			poll_title.value = `Route for level ${status.value.current_path.length + 1}`
 		} else {
 			poll_disabled = true;
 
@@ -205,7 +210,7 @@ function save_reset() {
 }
 
 function startPoll() {
-	window.ipc.send('POLL:START', { title: poll_title.value.value })
+	window.ipc.send('POLL:START', { title: poll_title.value.value, duration: 120 })
 	poll_running.value = true;
 
 }

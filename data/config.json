@@ -1,0 +1,4 @@
+{
+	"port": 3000,
+	"default_poll_duration": 120
+}

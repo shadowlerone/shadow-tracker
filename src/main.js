@@ -3,7 +3,8 @@ import { app, BrowserWindow, ipcMain, shell } from 'electron';
 import path from 'node:path';
 import started from 'electron-squirrel-startup';
 const fs = require('fs');
-
+const config = require(path.join(__dirname, 'data', 'config.json'))
+const DEFAULT_POLL_DURATION = config.default_poll_duration ? config.default_poll_duration : 120
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
 	app.quit();
@@ -163,7 +164,7 @@ const express = require('express')
 // WEBSERVER STUFF
 //#region WEBSERVER STUFF
 const express_app = express()
-const port = 3000
+const port = config.port ? config.port : 3000
 
 express_app.use(express.json())
 
@@ -200,7 +201,7 @@ express_app.get('/status', (req, res) => {
 })
 express_app.get('/poll', (req, res) => {
 	console.log("Creating test poll!")
-	let poll = twitch_app.createPoll('test poll', current_path.show_choices_text(), 30);
+	let poll = twitch_app.createPoll('test poll', current_path.show_choices_text(), DEFAULT_POLL_DURATION);
 	res.send(poll.data)
 		/* poll.start().then((e) => res.send(poll.data)); */
 		;
