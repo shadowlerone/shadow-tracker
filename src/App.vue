@@ -37,8 +37,8 @@
 		<div class="flex">
 			<input :disabled="poll_running || poll_disabled" placeholder="Poll Title" class="input"
 				:value="poll_title" />
-			<input :disabled="poll_running || poll_disabled" placeholder="Poll Duration" type="number" min="15" max="300" class="input"
-				:value="poll_duration" />
+			<input :disabled="poll_running || poll_disabled" placeholder="Poll Duration" type="number" min="15"
+				max="300" class="input" :value="poll_duration" />
 			<button :disabled="poll_running || poll_disabled" class="btn" @click="startPoll()">Start Poll</button>
 		</div>
 		<div class="btn-container" v-if="poll_result">
@@ -106,6 +106,7 @@
 					<th>4</th>
 					<th>5</th>
 					<th>6</th>
+					<th>Boss</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -118,6 +119,7 @@
 					<td>{{ uv["STAGE 3"] }}</td>
 					<td>{{ uv["STAGE 4"] }}</td>
 					<td>{{ uv["STAGE 5"] }}</td>
+					<td>{{ uv["STAGE 6"] }}</td>
 					<td>{{ uv["BOSS"] }}</td>
 				</tr>
 			</tbody>
@@ -154,6 +156,7 @@ onMounted(() => {
 	});
 	window.ipc.on('CHOOSE', (payload) => {
 		console.log(`choose ${payload ? "succeeded" : "failed"}`)
+		window.ipc.send('STATUS')
 	})
 	window.ipc.on('POLL:END', (payload) => {
 		console.log(payload)
@@ -177,7 +180,10 @@ onMounted(() => {
 
 			// poll_title.value.disabled = true;
 		}
-		if (status.potential_choices < 2) {
+
+		console.log(`Potential Choices ${status.value.potential_choices}`)
+		if (status.value.potential_choices.length < 2) {
+			console.log("disabling polls. too few choices")
 			poll_disabled = true;
 		}
 	})
@@ -210,7 +216,7 @@ function save_reset() {
 }
 
 function startPoll() {
-	window.ipc.send('POLL:START', { title: poll_title.value.value, duration: 120 })
+	window.ipc.send('POLL:START', { title: poll_title.value, duration: 120 })
 	poll_running.value = true;
 
 }

@@ -150,7 +150,14 @@ class ShadowPath {
 				o = n;
 			}
 		}
-		fs.writeFileSync(this.completed_fp, JSON.stringify(this.completed), 'utf8')
+		try {
+			
+			fs.writeFileSync(this.completed_fp, JSON.stringify(this.completed), {encoding: 'utf8'})
+		} catch {
+			// alert(`failed to write to main path: ${this.completed_fp}`)
+			console.error(`failed to write to main path: ${this.completed_fp}`)
+			// fs.writeFileSync('backup_'+this.completed_fp, JSON.stringify(this.completed), {encoding: 'utf8'})
+		}
 		return o
 	}
 }
