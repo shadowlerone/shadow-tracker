@@ -5,6 +5,9 @@ import started from 'electron-squirrel-startup';
 const fs = require('fs');
 const config = require(path.join(__dirname, 'data', 'config.json'))
 const DEFAULT_POLL_DURATION = config.default_poll_duration ? config.default_poll_duration : 120
+
+// app.setPath("userData", path.join(__dirname, 'data'))
+console.log(app.getPath("userData"))
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
 	app.quit();
@@ -55,7 +58,10 @@ const createWindow = () => {
 	}
 
 	// Open the DevTools.
-	mainWindow.webContents.openDevTools();
+	if (config.debug && config.debug == true) {
+		mainWindow.webContents.openDevTools();
+	}
+
 };
 
 
@@ -75,6 +81,8 @@ app.whenReady().then(() => {
 		console.log(response)
 		console.log(current_path.toString())
 		event.reply('CHOOSE', response);
+		// event.reply('STATUS', current_path.statistics)
+
 	});
 
 	ipcMain.on('SAVE', (event, payload) => {
@@ -91,7 +99,7 @@ app.whenReady().then(() => {
 		event.reply('STATUS', current_path.statistics)
 	})
 	ipcMain.on('POLL:START', (event, payload) => {
-		let poll = twitch_app.createPoll(payload.title, current_path.show_choices_text(), payload.duration ? payload.duration : 15);
+		let poll = twitch_app.createPoll(payload.title ? payload.title : `Route for level ${current_path.length + 1}`, current_path.show_choices_text(), payload.duration ? payload.duration : 15);
 		// poll.start()
 		// res.send(poll.data)
 		event.reply('POLL:STARTED', current_path.statistics)
@@ -116,8 +124,13 @@ app.whenReady().then(() => {
 // explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
 	if (process.platform !== 'darwin') {
-		current_path.save_completed();
-		app.quit();
+		try {
+			current_path.save_completed();
+		} catch {
+
+		} finally {
+			app.quit();
+		}
 	}
 });
 
@@ -130,7 +143,15 @@ app.on('window-all-closed', () => {
 // LOGIC Stuff
 //#region LOGIC STUFF
 import ShadowPath from './shadowpath.js'
-let current_path = new ShadowPath();
+let table_fp = path.resolve(__dirname, 'data', 'table.json');
+let completed_fp = path.join(app.getPath("userData"), 'completed.json');
+
+if (!fs.existsSync(completed_fp)) {
+	fs.writeFileSync(completed_fp,
+		fs.readFileSync(path.resolve(__dirname, 'data', 'completed.json'))
+		, 'utf-8')
+}
+let current_path = new ShadowPath(table_fp, completed_fp);
 
 //#endregion
 
