@@ -87,7 +87,7 @@ class ShadowPath {
 	}
 
 	choose(option) {
-		if (!OPTIONS.includes(option)) {
+			if (!OPTIONS.includes(option[0].toUpperCase())) {
 			// console.log(`Option ${option} not in OPTIONS`)
 			return false;
 		}
