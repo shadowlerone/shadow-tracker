@@ -77,12 +77,21 @@ app.whenReady().then(() => {
 	});
 	ipcMain.on('CHOOSE', (event, payload) => {
 		// const content = fs.readFileSync(payload.path);
-		const response = current_path.choose(payload)
+		let response;
+
+		console.log(payload)
+		payload = JSON.parse(payload)
+		if (payload.choice == 'R'){
+			console.log("Random")
+			response = current_path.choose_random(payload.options)
+		} else {
+			console.log(`Chose ${payload.choice}`)
+			response = current_path.choose(payload.choice)
+		}
 		console.log(response)
 		console.log(current_path.toString())
 		event.reply('CHOOSE', response);
 		// event.reply('STATUS', current_path.statistics)
-
 	});
 
 	ipcMain.on('SAVE', (event, payload) => {

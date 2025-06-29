@@ -47,6 +47,9 @@
 					:class="w.title">
 					{{ w.title }}
 				</button>
+				<button @click="choose('R')" class="level btn no-radius">
+					Random!
+				</button>
 			</template>
 			<template v-else>
 				<button @click="choose(poll_result.title[0])" class="level btn no-radius" :class="poll_result.title">
@@ -156,6 +159,8 @@ onMounted(() => {
 	});
 	window.ipc.on('CHOOSE', (payload) => {
 		console.log(`choose ${payload ? "succeeded" : "failed"}`)
+		poll_result.value = undefined;
+
 		window.ipc.send('STATUS')
 	})
 	window.ipc.on('POLL:END', (payload) => {
@@ -201,11 +206,17 @@ onMounted(() => {
 
 function choose(option) {
 	console.log(`choosing ${option}`)
-	poll_result.value = undefined;
-	const payload = option
-	window.ipc.send('CHOOSE', payload)
+	let ties = [];
+	if (option == 'R' && poll_result.value && Array.isArray(poll_result.value)) {
+		ties = poll_result.value.map(e => e.title[0])
+	}
+	console.log(ties)
+	// const payload = { choice: option, options: ties };
+	window.ipc.send('CHOOSE', JSON.stringify({ choice: option, options: ties }))
 	window.ipc.send('STATUS')
 }
+
+
 
 function save() {
 	window.ipc.send('SAVE', {})
