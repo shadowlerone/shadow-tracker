@@ -65,8 +65,8 @@
 		<button class='btn' @click="reset()">Reset</button>
 	</div>
 	<h2>Stats</h2>
-	<button @click="showStats = !showStats">Toggle Stats</button>
-	<div v-if="status && showStats">
+	<button class="btn" :class="{ activated: showStats }" @click="showStats = !showStats">Toggle Stats</button>
+	<div v-if="status && showStats" class="stats">
 		<h2>Progression</h2>
 		<table>
 			<thead>
@@ -91,15 +91,21 @@
 		</table>
 
 		<h2>Possible paths given current run:</h2>
+		<button class="btn slim" :class="{ activated: showLevels }" @click="showLevels = !showLevels">Toggle
+			Levels</button>
 		<table>
 			<thead>
 				<tr>
 					<th rowspan="2">Number</th>
 					<th rowspan="2">Name</th>
 					<th rowspan="2">Path</th>
-					<th rowspan="1" colspan="7">Levels</th>
+
+					<template v-if="showLevels">
+						<th rowspan="1" colspan="7">Levels</th>
+					</template>
 				</tr>
-				<tr>
+
+				<tr v-if="showLevels">
 					<th>1</th>
 					<th>2</th>
 					<th>3</th>
@@ -108,23 +114,28 @@
 					<th>6</th>
 					<th>Boss</th>
 				</tr>
+
 			</thead>
 			<tbody>
 				<tr v-for="uv in status.unvisited_paths">
 					<td>{{ uv.NUMBER }}</td>
 					<td>{{ uv.NAME }}</td>
 					<td>{{ uv.MISSION }}</td>
-					<td>{{ uv["STAGE 1"] }}</td>
-					<td>{{ uv["STAGE 2"] }}</td>
-					<td>{{ uv["STAGE 3"] }}</td>
-					<td>{{ uv["STAGE 4"] }}</td>
-					<td>{{ uv["STAGE 5"] }}</td>
-					<td>{{ uv["STAGE 6"] }}</td>
-					<td>{{ uv["BOSS"] }}</td>
+					<template v-if="showLevels">
+						<td>{{ uv["STAGE 1"] }}</td>
+						<td>{{ uv["STAGE 2"] }}</td>
+						<td>{{ uv["STAGE 3"] }}</td>
+						<td>{{ uv["STAGE 4"] }}</td>
+						<td>{{ uv["STAGE 5"] }}</td>
+						<td>{{ uv["STAGE 6"] }}</td>
+						<td>{{ uv["BOSS"] }}</td>
+					</template>
+
 				</tr>
 			</tbody>
 		</table>
 	</div>
+
 	<!-- <div>
 		<p>{{ status }}</p>
 	</div> -->
@@ -143,6 +154,7 @@ let poll_result = ref();
 let poll_running = ref(false);
 let poll_disabled = ref(false);
 let showStats = ref(false)
+let showLevels = ref(true)
 
 let poll_title = ref('')
 let poll_duration = ref(120)
@@ -232,3 +244,23 @@ function _reset() {
 
 console.log('👋 This message is being logged by "App.vue", included via Vite');
 </script>
+
+<style lang="css">
+/*
+  Enter and leave animations can use different
+  durations and timing functions.
+*/
+.slide-fade-enter-active {
+	transition: all 300ms ease-out;
+}
+
+.slide-fade-leave-active {
+	transition: all 200ms cubic-bezier(1, 0.5, 0.8, 1);
+}
+
+.slide-fade-enter-from,
+.slide-fade-leave-to {
+	transform: translateY(20px);
+	opacity: 0;
+}
+</style>

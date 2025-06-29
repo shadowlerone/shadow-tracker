@@ -71,7 +71,13 @@ h2 {
 .btn {
 	height: 5em;
 	border: 4px solid black;
+	transition-duration: 75ms;
+	transition-timing-function: cubic-bezier(1, 0, 0, 1);
 }
+.input.slim,.btn.slim {
+	height: 3em;
+}
+
 .btn {
 	flex-grow: 1;
 	font-weight: bold;
@@ -91,6 +97,11 @@ h2 {
 	border-color: white;
 	filter: drop-shadow(8px 8px black) /* drop-shadow(4px 4px black) */;
 	/* background-color: lightcyan; */
+	transform: scale(1.10);
+	
+}
+.btn.activated {
+	background-color:green;
 }
 .no-radius,
 .no-radius *,
@@ -113,3 +124,10 @@ td {
 	align-items: center;
 	/* display: flex; */
 }
+
+.stats {
+	background-color: whitesmoke;
+	padding: 0.5em;
+	overflow-y: scroll;
+}
+
