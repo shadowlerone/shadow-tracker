@@ -99,10 +99,14 @@ class ShadowPath {
 		return true;
 	}
 	choose_random(choices  = []){
+		console.log(choices)
 		if (choices.length == 0){
 			choices = this.show_choices();
 		}
-		var choice = choices[Math.floor(Math.random) * choices.length];
+		console.log(choices)
+		
+		var choice = choices[Math.floor(Math.random() * choices.length)];
+		console.log(choice)
 		return this.choose(choice)
 	}
 
