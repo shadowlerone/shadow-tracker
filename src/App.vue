@@ -216,7 +216,7 @@ function save_reset() {
 }
 
 function startPoll() {
-	window.ipc.send('POLL:START', { title: poll_title.value, duration: 120 })
+	window.ipc.send('POLL:START', { title: poll_title.value, duration: poll_duration.value })
 	poll_running.value = true;
 
 }

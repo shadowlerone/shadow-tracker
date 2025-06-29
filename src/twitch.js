@@ -160,6 +160,7 @@ class User extends CachedEndpoint {
 
 class Poll extends CachedEndpoint {
 	started = false;
+	result_received = false;
 	constructor(user, headers, title, choices, duration = 120) {
 		super(
 			'https://api.twitch.tv/helix/polls',
@@ -270,6 +271,7 @@ class Twitch {
 	User;
 	user_id;
 	event_handler_queue;
+	last_poll;
 	on_setup = (t) => { };
 	constructor(client_id) {
 		this.client_id = client_id
@@ -430,12 +432,12 @@ class Twitch {
 		var a = new Announcement()
 		//TODO: rest of method
 	}
-	createPoll(title, choices, duration = 2 * 60) {
+	async createPoll(title, choices, duration = 2 * 60) {
 		// console.log(`user:`)
 		// console.log(this.User)
-		let poll = new Poll(this.User, this.headers, title, choices, duration);
-		poll.start();
-		return poll;
+		this.last_poll = new Poll(this.User, this.headers, title, choices, duration);
+		await this.last_poll.start();
+		return this.last_poll;
 	}
 }
 

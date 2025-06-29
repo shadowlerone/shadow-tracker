@@ -26,28 +26,40 @@ const createWindow = () => {
 		console.log("Called on_setup")
 		t.on('channel.poll.end', (event) => {
 			console.log("DETECTED A POLL ENDING")
-			console.log(event.choices)
-			let base_choice = { votes: -1 }
-			var winner = event.choices.reduce((a, c) => {
-				if (Array.isArray(a)) {
-					console.log("Sorting hit array")
-					var ac = a[0]
-					if (ac.votes == c.votes) {
-						console.log("Sorting pushed to array")
-						a.push(c)
-						return a
+			if (t.last_poll.result_received && t.last_poll.id == event.id){
+				console.log("DOUBLE POLL RESULT DETECTED")
+				return;
+			}
+			if (event.status == 'archived'){
+				return;
+			}
+			if (t.last_poll.id != event.id || (t.last_poll.id == event.id && !t.last_poll.result_received)) {
+				console.log(event)
+				console.log(event.choices)
+				let base_choice = { votes: -1 }
+				var winner = event.choices.reduce((a, c) => {
+					if (Array.isArray(a)) {
+						console.log("Sorting hit array")
+						var ac = a[0]
+						if (ac.votes == c.votes) {
+							console.log("Sorting pushed to array")
+							a.push(c)
+							return a
+						}
+						return ac.votes < c.votes ? c : ac
+					} else {
+						if (c.votes == a.votes) {
+							console.log("Sorting created to array")
+							return [a, c]
+						}
+						return a.votes < c.votes ? c : a
 					}
-					return ac.votes < c.votes ? c : ac
-				} else {
-					if (c.votes == a.votes) {
-						console.log("Sorting created to array")
-						return [a, c]
-					}
-					return a.votes < c.votes ? c : a
-				}
-			}, base_choice)
-			console.log(`Winner: ${winner}`)
-			mainWindow.webContents.send('POLL:END', winner)
+				}, base_choice)
+				console.log(`Winner: ${winner}`)
+				t.last_poll.result_received = true;
+				mainWindow.webContents.send('POLL:END', winner)
+			}
+
 		})
 	}
 	// and load the index.html of the app.
@@ -164,7 +176,7 @@ import { User, AUTH_URL, TWITCH_CLIENT_ID, Poll, Twitch } from './twitch.js'
 let STATE;
 let TOKEN
 const twitch_app = new Twitch(TWITCH_CLIENT_ID);
-
+let POLL;
 function authenticate(state, url) {
 	STATE = state;
 	shell.openExternal(url)
@@ -220,9 +232,9 @@ express_app.get('/status', (req, res) => {
 		root: path.join(__dirname, 'public')
 	})
 })
-express_app.get('/poll', (req, res) => {
+express_app.get('/poll', async (req, res) => {
 	console.log("Creating test poll!")
-	let poll = twitch_app.createPoll('test poll', current_path.show_choices_text(), DEFAULT_POLL_DURATION);
+	let poll = await twitch_app.createPoll('test poll', current_path.show_choices_text(), DEFAULT_POLL_DURATION);
 	res.send(poll.data)
 		/* poll.start().then((e) => res.send(poll.data)); */
 		;
