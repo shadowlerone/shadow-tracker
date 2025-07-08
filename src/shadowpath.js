@@ -98,7 +98,17 @@ class ShadowPath {
 		this.verify();
 		return true;
 	}
-
+	choose_random(choices  = []){
+		console.log(choices)
+		if (choices.length == 0){
+			choices = this.show_choices();
+		}
+		console.log(choices)
+		
+		var choice = choices[Math.floor(Math.random() * choices.length)];
+		console.log(choice)
+		return this.choose(choice)
+	}
 
 	find_current_matching_paths() {
 		return this.table.filter(
