@@ -1,7 +1,7 @@
 
 import path from 'node:path';
 const fs = require('fs');
-
+import logger from './logger'
 // console.log(`table: ${table}`)
 // console.log(table);
 
@@ -87,7 +87,7 @@ class ShadowPath {
 	}
 
 	choose(option) {
-			if (!OPTIONS.includes(option[0].toUpperCase())) {
+		if (!OPTIONS.includes(option[0].toUpperCase())) {
 			// console.log(`Option ${option} not in OPTIONS`)
 			return false;
 		}
@@ -98,13 +98,13 @@ class ShadowPath {
 		this.verify();
 		return true;
 	}
-	choose_random(choices  = []){
+	choose_random(choices = []) {
 		console.log(choices)
-		if (choices.length == 0){
+		if (choices.length == 0) {
 			choices = this.show_choices();
 		}
 		console.log(choices)
-		
+
 		var choice = choices[Math.floor(Math.random() * choices.length)];
 		console.log(choice)
 		return this.choose(choice)
@@ -159,13 +159,13 @@ class ShadowPath {
 				this.completed.push(n);
 				o = n;
 			}
+			logger.info(`Added ${o} to completed list`, {ShadowPath: this, ending_number: o})
 		}
 		try {
-			
-			fs.writeFileSync(this.completed_fp, JSON.stringify(this.completed), {encoding: 'utf8'})
-		} catch {
+			fs.writeFileSync(this.completed_fp, JSON.stringify(this.completed), { encoding: 'utf8' })
+		} catch (err) {
 			// alert(`failed to write to main path: ${this.completed_fp}`)
-			console.error(`failed to write to main path: ${this.completed_fp}`)
+			logger.error(`failed to write to main path: ${this.completed_fp}`, {error: err, context: this})
 			// fs.writeFileSync('backup_'+this.completed_fp, JSON.stringify(this.completed), {encoding: 'utf8'})
 		}
 		return o

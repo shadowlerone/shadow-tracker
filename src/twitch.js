@@ -1,5 +1,6 @@
 const fs = require('fs');
 import crypto from 'crypto'
+import logger from './logger'
 // import WebSocket from 'ws';
 
 //#region Authentication Stuff
@@ -354,6 +355,7 @@ class Twitch {
 		this.on_setup(this);
 	}
 	saveToken() {
+		// TODO add token saving
 		fs.writeFileSync('TOKEN', this.token, 'utf8')
 	}
 
