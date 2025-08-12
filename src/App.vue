@@ -1,4 +1,7 @@
 <template>
+	<div class="header">
+		<button @click="report_bug()">Report Bug</button>
+	</div>
 	<div>
 		<div v-if="status != undefined">
 			<h2>Current Path</h2>
@@ -186,8 +189,6 @@ onMounted(() => {
 		status.value = payload;
 		console.log(status.value)
 
-
-
 		if (status.value.current_path.length < 6) {
 			// poll_title.value.disabled = false;
 			poll_disabled = false;
@@ -251,6 +252,11 @@ function reset() {
 function _reset() {
 	poll_result.value = ''
 	window.ipc.send('RESET', {})
+}
+
+
+function report_bug() {
+	window.ipc.send('BUG', {})
 }
 
 console.log('👋 This message is being logged by "App.vue", included via Vite');

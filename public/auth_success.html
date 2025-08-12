@@ -16,6 +16,7 @@
 			) */
 		function f() {
 			let usp = new URLSearchParams(document.location.hash.replace('#', '?'))
+			// TODO: Check if response is valid.
 			fetch(
 				'http://localhost:3000/set_token',
 				{
