@@ -3,8 +3,8 @@ body {
 		Helvetica, Arial, sans-serif;
 	margin: auto;
 	margin-top: 0;
-	max-width: 90%;
-	padding: 1rem;
+	max-width: 100%;
+	/* padding: 1rem; */
 	padding-top: 0;
 	/* background-color: aliceblue; */
 	background-color: lightblue;
@@ -13,6 +13,37 @@ body {
 	font-size: 1.25rem;
 	box-sizing: border-box;
 }
+#app{
+	display: grid;
+	grid-template-columns: 0.5fr 5fr 0.5fr;
+	column-gap: 1rem;
+}
+#content {
+	/* background-color: red; */
+	padding-bottom: 1rem;
+
+}
+#navigation {
+	position: sticky;
+	top:7.5vh;
+	height: 85vh;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	/* gap: 1rem; */
+}
+#navigation > .btn {
+	/* height: 2.5em !important; */
+	flex-grow: unset;
+
+}
+.l-btn {
+	border-left: none !important;
+	border-top-left-radius: 0 !important;
+	border-bottom-left-radius: 0 !important;
+}
+
+
 .dark,
 .D,
 .Dark {
@@ -39,7 +70,7 @@ h2 {
 
 #app {
 	/* width: 100%; */
-	padding: 2em;
+	/* padding: 2em; */
 	padding-top: 0.5em;
 	margin: 0;
 }
@@ -82,14 +113,24 @@ h2 {
 	flex-grow: 1;
 	font-weight: bold;
 }
-.btn-container > .btn:first-child {
+.btn-container.h > .btn:first-child {
 	border-top-left-radius: 20px;
 	border-bottom-left-radius: 20px;
 }
-.btn-container > .btn:last-child {
+.btn-container.h > .btn:last-child {
 	border-top-right-radius: 20px;
 	border-bottom-right-radius: 20px;
 }
+
+.btn-container.v > .btn:first-child {
+	border-top-right-radius: 20px;
+	border-top-left-radius: 20px;
+}
+.btn-container.v > .btn:last-child {
+	border-bottom-right-radius: 20px;
+	border-bottom-left-radius: 20px;
+}
+
 
 .btn:hover:not(:disabled),
 .input:hover:not(:disabled),

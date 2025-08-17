@@ -1,166 +1,50 @@
 <template>
-	<div class="header">
+	<!-- <div class="header">
 		<button @click="report_bug()">Report Bug</button>
+	</div> -->
+	<div id="navigation" class="btn-container v">
+		<!-- Navigation -->
+		<button class="btn l-btn" @click="tab = 0">Twitch</button>
+		<button class="btn l-btn" @click="tab = 1">Stats</button>
+		<button class="btn l-btn">Admin</button>
+		<button class="btn l-btn">Settings</button>
 	</div>
-	<div>
-		<div v-if="status != undefined">
-			<h2>Current Path</h2>
-			<div class="level-container">
-				<template v-for="c in status.current_path">
-					<div class="level" :class="c">{{ c }}</div>
-				</template>
-				<template v-if="status.current_path.length == 0">
-					<div class="level">Path not started!</div>
-				</template>
-			</div>
+	<div id="content">
+		<template v-if="tab == 0">
+			<Twitch :status="status" :poll_result="poll_result" :poll_disabled="poll_disabled"
+				:poll_running="poll_running" :poll_title="poll_title" @save="save" @save_reset="save_reset"
+				@reset="reset" @choose="choose" @startPoll="startPoll" />
+		</template>
+		<template v-else-if="tab == 1">
+			<Stats :status="status" />
+		</template>
 
-		</div>
-		<div v-if="status != undefined">
-			<!-- <div>Current Path: {{ status.current_path_string }}</div> -->
-			<div>Path number: {{ status.current_path_number }}</div>
-			<!-- <div v-if="status.current_path_number != 'Unconfirmed'">Path name: {{  }}</div> -->
-		</div>
-
-	</div>
-	<template v-if="status != undefined && status.current_path.length < 6">
-		<h2>Controls</h2>
-		<div class="btn-container" v-if="status != undefined">
-			<button class="dark btn" v-if="status.potential_choices.includes('D')" @click="choose('D')">Dark</button>
-			<button class="neutral btn" v-if="status.potential_choices.includes('N')"
-				@click="choose('N')">Neutral</button>
-			<button class="hero btn" v-if="status.potential_choices.includes('H')" @click="choose('H')">Hero</button>
-		</div>
-	</template>
-
-	<h2>Poll</h2>
-	<div class="group no-radius">
-		<!-- <label>
-			Poll Title
-		</label> -->
-		<div class="flex">
-			<input :disabled="poll_running || poll_disabled" placeholder="Poll Title" class="input"
-				:value="poll_title" />
-			<input :disabled="poll_running || poll_disabled" placeholder="Poll Duration" type="number" min="15"
-				max="300" class="input" :value="poll_duration" />
-			<button :disabled="poll_running || poll_disabled" class="btn" @click="startPoll()">Start Poll</button>
-		</div>
-		<div class="btn-container" v-if="poll_result">
-			<template v-if="Array.isArray(poll_result)">
-				<button v-for="w in poll_result" @click="choose(w.title[0])" class="level btn no-radius"
-					:class="w.title">
-					{{ w.title }}
-				</button>
-				<button @click="choose('R')" class="level btn no-radius">
-					Random!
-				</button>
-			</template>
-			<template v-else>
-				<button @click="choose(poll_result.title[0])" class="level btn no-radius" :class="poll_result.title">
-					{{ poll_result.title }}
-				</button>
-			</template>
-			<!-- {{ poll_result }} -->
-		</div>
-	</div>
-
-
-	<h2>Admin</h2>
-	<div class="btn-container">
-		<button class='btn' @click="save()">Save</button>
-		<button class='btn' @click="save_reset()">Save and Reset</button>
-		<button class='btn' @click="reset()">Reset</button>
-	</div>
-	<h2>Stats</h2>
-	<button class="btn" :class="{ activated: showStats }" @click="showStats = !showStats">Toggle Stats</button>
-	<div v-if="status && showStats" class="stats">
-		<h2>Progression</h2>
-		<table>
-			<thead>
-				<tr>
-					<th>Paths Completed</th>
-					<th>Paths Left</th>
-					<th>Choices Left</th>
-					<th>Percentage Completed</th>
-					<th>Days Left</th>
-					<!-- <th>Days Left</th> -->
-				</tr>
-			</thead>
-			<tbody>
-				<tr>
-					<td>{{ status.completed }}</td>
-					<td>{{ status.paths_left }}</td>
-					<td>{{ status.paths_left * 6 }}</td>
-					<td>{{ status.percentage_completed.toFixed(2) + '%' }}</td>
-					<td>{{ status.days_left }}</td>
-				</tr>
-			</tbody>
-		</table>
-
-		<h2>Possible paths given current run:</h2>
-		<button class="btn slim" :class="{ activated: showLevels }" @click="showLevels = !showLevels">Toggle
-			Levels</button>
-		<table>
-			<thead>
-				<tr>
-					<th rowspan="2">Number</th>
-					<th rowspan="2">Name</th>
-					<th rowspan="2">Path</th>
-
-					<template v-if="showLevels">
-						<th rowspan="1" colspan="7">Levels</th>
-					</template>
-				</tr>
-
-				<tr v-if="showLevels">
-					<th>1</th>
-					<th>2</th>
-					<th>3</th>
-					<th>4</th>
-					<th>5</th>
-					<th>6</th>
-					<th>Boss</th>
-				</tr>
-
-			</thead>
-			<tbody>
-				<tr v-for="uv in status.unvisited_paths">
-					<td>{{ uv.NUMBER }}</td>
-					<td>{{ uv.NAME }}</td>
-					<td>{{ uv.MISSION }}</td>
-					<template v-if="showLevels">
-						<td>{{ uv["STAGE 1"] }}</td>
-						<td>{{ uv["STAGE 2"] }}</td>
-						<td>{{ uv["STAGE 3"] }}</td>
-						<td>{{ uv["STAGE 4"] }}</td>
-						<td>{{ uv["STAGE 5"] }}</td>
-						<td>{{ uv["STAGE 6"] }}</td>
-						<td>{{ uv["BOSS"] }}</td>
-					</template>
-
-				</tr>
-			</tbody>
-		</table>
-	</div>
-
-	<!-- <div>
+		<!-- <div>
 		<p>{{ status }}</p>
 	</div> -->
-	<!-- 	<div>
+		<!-- 	<div>
 		<button>Start Poll</button>
 	</div> -->
+	</div>
+
 </template>
 
 <script setup>
 
 
 import { useTemplateRef, ref, onMounted, computed } from 'vue'
-
+import Stats from './Views/Stats.vue'
+import Twitch from './Views/Twitch.vue';
 let status = ref();
 let poll_result = ref();
 let poll_running = ref(false);
 let poll_disabled = ref(false);
-let showStats = ref(false)
-let showLevels = ref(true)
+
+let tab = ref(0)
+let tabs = ref([
+	Twitch,
+	Stats
+])
 
 let poll_title = ref('')
 let poll_duration = ref(120)
