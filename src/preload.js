@@ -17,7 +17,8 @@ const validChannels = [
 	'CHOOSE', 'SAVE', 
 	'POLL:START','POLL:END',
 	'STATUS',
-	'RESET'
+	'RESET',
+	'RANDOM_PATH'
 ];
 contextBridge.exposeInMainWorld(
 	'ipc', {
