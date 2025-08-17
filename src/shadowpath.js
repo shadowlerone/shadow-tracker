@@ -16,6 +16,15 @@ class ShadowPath {
 		'N': 'Neutral',
 		'H': 'Hero'
 	}
+	static mission_string_to_array(mission){
+		let i = mission.split("")
+		let o = i.slice(0,5)
+		console.log(i)
+		console.log(o)
+
+		o.push(i[6])
+		return o
+	}
 	choices;
 	table_fp;
 	completed_fp;
@@ -135,6 +144,12 @@ class ShadowPath {
 
 	}
 
+
+	select_random_path() {
+		let p = this.find_current_matching_paths()[Math.floor(Math.random() * this.find_current_matching_paths().length)]
+		
+		ShadowPath.mission_string_to_array(p.MISSION).forEach(e => this.choose(e))
+	}
 	show_choices() {
 		if (this.length >= 6) {
 			return []

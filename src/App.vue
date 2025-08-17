@@ -1,7 +1,7 @@
 <template>
-	<div class="header">
+	<!-- <div class="header">
 		<button @click="report_bug()">Report Bug</button>
-	</div>
+	</div> -->
 	<div>
 		<div v-if="status != undefined">
 			<h2>Current Path</h2>
@@ -31,12 +31,14 @@
 			<button class="hero btn" v-if="status.potential_choices.includes('H')" @click="choose('H')">Hero</button>
 		</div>
 	</template>
-
+	<template v-if="status != undefined && status.current_path.length < 6">
+		<h2>Random!</h2>
+		<div class="btn-container" v-if="status != undefined">
+			<button class="btn" @click="random_path()">Random Path</button>
+		</div>
+	</template>
 	<h2>Poll</h2>
 	<div class="group no-radius">
-		<!-- <label>
-			Poll Title
-		</label> -->
 		<div class="flex">
 			<input :disabled="poll_running || poll_disabled" placeholder="Poll Title" class="input"
 				:value="poll_title" />
@@ -229,7 +231,10 @@ function choose(option) {
 	window.ipc.send('STATUS')
 }
 
-
+function random_path() {
+	window.ipc.send('RANDOM_PATH')
+	console.log("Sending random")
+}
 
 function save() {
 	window.ipc.send('SAVE', {})

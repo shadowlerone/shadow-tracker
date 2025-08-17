@@ -14,7 +14,7 @@ const USER_DATA_FOLDER = app.getPath("userData");
 
 const logger = setupLogger(USER_DATA_FOLDER)
 
-function userDataFolder(folder){
+function userDataFolder(folder) {
 	return path.join(USER_DATA_FOLDER, folder)
 }
 logger.debug("App Path", USER_DATA_FOLDER)
@@ -187,7 +187,14 @@ app.whenReady().then(() => {
 			}
 		)
 	})
-	logger.verbose("Added listener on BUG")
+	ipcMain.on("RANDOM_PATH", (event, payload) => {
+		current_path.select_random_path()
+
+		event.reply('STATUS', current_path.statistics)
+
+	})
+
+	logger.verbose("Added listener on RANDOM_PATH")
 
 	// ipcMain.on('')
 	createWindow();
