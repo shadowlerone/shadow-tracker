@@ -1,7 +1,7 @@
 {
 	"name": "shadow-tracker",
 	"productName": "ShadowTracker",
-	"version": "0.1.2",
+	"version": "0.1.3",
 	"description": "A progress tracker for the game Shadow The Hedgehog",
 	"main": ".vite/build/main.js",
 	"scripts": {
