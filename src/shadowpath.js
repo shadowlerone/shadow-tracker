@@ -1,7 +1,7 @@
 
 import path from 'node:path';
 const fs = require('fs');
-import logger from './logger'
+// import logger from './logger'
 // console.log(`table: ${table}`)
 // console.log(table);
 
@@ -30,6 +30,7 @@ class ShadowPath {
 	completed_fp;
 	table;
 	completed;
+	logger;
 	constructor(
 		table_fp = path.resolve(__dirname, 'data', 'table.json'),
 		completed_fp = path.resolve(__dirname, 'data', 'completed.json')
@@ -174,13 +175,13 @@ class ShadowPath {
 				this.completed.push(n);
 				o = n;
 			}
-			logger.info(`Added ${o} to completed list`, {ShadowPath: this, ending_number: o})
+			this.logger.info(`Added ${o} to completed list`, {ShadowPath: this, ending_number: o})
 		}
 		try {
 			fs.writeFileSync(this.completed_fp, JSON.stringify(this.completed), { encoding: 'utf8' })
 		} catch (err) {
 			// alert(`failed to write to main path: ${this.completed_fp}`)
-			logger.error(`failed to write to main path: ${this.completed_fp}`, {error: err, context: this})
+			this.logger.error(`failed to write to main path: ${this.completed_fp}`, {error: err, context: this})
 			// fs.writeFileSync('backup_'+this.completed_fp, JSON.stringify(this.completed), {encoding: 'utf8'})
 		}
 		return o
