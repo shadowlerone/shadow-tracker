@@ -243,6 +243,7 @@ if (!fs.existsSync(completed_fp)) {
 logger.info("Found data files", { "table filepath": table_fp, "completed filepath": completed_fp })
 
 let current_path = new ShadowPath(table_fp, completed_fp);
+current_path.logger = logger;
 logger.info("Initialized ShadowPath", current_path)
 //#endregion
 
