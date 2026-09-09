@@ -36,3 +36,17 @@ Big bold colors, as you do.
 
 ![Colors](./docs/UI1.png)
  
+## Tech Stack
+
+### Front-End
+
+- VueJS
+- 
+
+### Back-End
+
+
+### Build
+
+Electron was used to transform the 'web app' into an executable.
+
